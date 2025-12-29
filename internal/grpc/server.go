@@ -9,10 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	apperrors "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/errors"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/services"
+	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 
-	productpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/product"
+	productpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/product"
 )
 
 type ProductServer struct {

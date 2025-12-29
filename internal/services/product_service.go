@@ -12,15 +12,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/db"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/entities"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/helpers"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	apperrors "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/errors"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/redis"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/repositories"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/db"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
 
-	productpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/product"
+	productpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/product"
 )
 
 type ProductSource interface {

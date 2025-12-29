@@ -21,7 +21,7 @@ type AppConfig struct {
 
 func LoadConfig(log *logrus.Logger) (*AppConfig, error) {
 	if os.Getenv("ENV") != "production" {
-		// log.Info("ENV not production")
+		log.Info("ENV not production")
 		if err := godotenv.Load(); err != nil {
 			log.Fatalf("FATAL: Gagal memuat file .env. Pastikan file ada. Error: %v", err)
 		}

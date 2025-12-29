@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/entities"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
@@ -40,6 +40,7 @@ func (a *API) AddToCart() echo.HandlerFunc {
 
 func (a *API) GetCartItemsByUserID() echo.HandlerFunc {
 	return func(c echo.Context) error {
+		logrus.Info("request GetCartItemsByUserID")
 		ctx := c.Request().Context()
 
 		userID, err := getUserIDFromContext(c)

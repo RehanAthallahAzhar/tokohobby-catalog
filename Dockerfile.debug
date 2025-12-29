@@ -1,0 +1,31 @@
+# Gunakan base image Go
+FROM golang:1.24-alpine
+
+# 1. Instal Delve (debugger Go)
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+# 2. Siapkan direktori kerja
+WORKDIR /app
+
+# 3. Salin file modul dan unduh dependensi
+# (Ini mempercepat build di masa depan)
+COPY go.mod go.sum ./
+RUN go mod download
+
+# 4. Salin sisa kode Anda
+COPY . .
+
+# 5. Build aplikasi dengan flag debug
+# Ini penting: -gcflags="all=-N -l" menonaktifkan optimasi
+# sehingga debugger bisa membaca variabel dengan benar.
+RUN go build -gcflags="all=-N -l" -o /app/main-debug ./cmd/web/main.go
+
+# 6. Ekspos port
+EXPOSE 8080   
+EXPOSE 50051  
+EXPOSE 2345   
+
+# 7. Perintah default adalah menjalankan Delve
+# Ini akan menjalankan binary /app/main-debug,
+# dan membuka "port EKG" di 2345
+CMD ["dlv", "exec", "/app/main-debug", "--listen=:2345", "--accept-multiclient", "--headless=true", "--api-version=2", "--log"]

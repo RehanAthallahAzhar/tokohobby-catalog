@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	apperrors "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 	"github.com/labstack/echo/v4"
 )
 

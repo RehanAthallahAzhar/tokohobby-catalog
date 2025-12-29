@@ -3,18 +3,19 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/entities"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/helpers"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/redis"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/repositories"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
 
-	accountpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/account"
+	accountpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/account"
 )
 
 type CartSource interface {
@@ -70,6 +71,8 @@ func (s *cartServiceImpl) AddItemToCart(ctx context.Context, userID, productID u
 		Checked:     true,
 		AddedAt:     time.Now(),
 	}
+
+	log.Println(item)
 
 	if err := s.cartRepo.AddItem(ctx, userID, productID, item); err != nil {
 		logger.WithError(err).Error("Gagal saat memanggil repository untuk menambah item")

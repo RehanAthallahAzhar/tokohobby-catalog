@@ -21,27 +21,28 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/db"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/configs"
-	dbGenerated "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/db"
-	customMiddleware "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/delivery/http/middlewares"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/delivery/http/routes"
-	grpcServerImpl "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/grpc"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/handlers"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/grpc/account"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/logger"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/redis"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/repositories"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/services"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/db"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/configs"
+	dbGenerated "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/db"
+	customMiddleware "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/delivery/http/middlewares"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/delivery/http/routes"
+	grpcServerImpl "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/grpc"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/handlers"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/grpc/account"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/logger"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 
-	accountpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/account"
-	authpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/auth"
-	productpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/product"
+	accountpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/account"
+	authpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/auth"
+	productpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/product"
 )
 
 func main() {
 	log := logger.NewLogger()
+	log.Println("newlogger executed")
 
 	cfg, err := configs.LoadConfig(log)
 	if err != nil {

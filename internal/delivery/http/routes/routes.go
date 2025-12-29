@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/delivery/http/middlewares"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/handlers"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/delivery/http/middlewares"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/handlers"
 
 	"github.com/labstack/echo/v4"
 )

@@ -5,10 +5,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/entities"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/helpers"
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	apperrors "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 )
 
 func (api *API) CreateProduct() echo.HandlerFunc {

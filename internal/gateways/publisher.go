@@ -3,7 +3,7 @@ package gateway
 import (
 	"context"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
 )
 
 type EventPublisher interface {

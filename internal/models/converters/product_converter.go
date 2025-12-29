@@ -3,7 +3,7 @@ package converters
 import (
 	"time"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
 )
 
 func MapToProductResponse(product *models.ProductWithSeller) *models.ProductResponse {

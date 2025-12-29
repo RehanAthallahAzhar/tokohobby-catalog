@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	authpb "github.com/RehanAthallahAzhar/shopeezy-protos/pb/auth"
+	authpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/auth"
 )
 
 type AuthClient struct {

@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/models"
-	customRedis "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/redis"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	customRedis "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
 )
 
 type CartRepository interface {

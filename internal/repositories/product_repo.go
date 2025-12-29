@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/RehanAthallahAzhar/shopeezy-catalog/internal/db"
-	apperrors "github.com/RehanAthallahAzhar/shopeezy-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/db"
+	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )

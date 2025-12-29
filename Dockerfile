@@ -1,5 +1,4 @@
 # --- Stage 1: Build ---
-# Menggunakan image Go resmi sebagai basis untuk kompilasi
 FROM golang:1.24-alpine AS builder
 
 # Menetapkan direktori kerja di dalam container
