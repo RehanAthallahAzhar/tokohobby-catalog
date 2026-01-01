@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/db"
-	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/db"
+	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 )
 
 type ProductRepository interface {

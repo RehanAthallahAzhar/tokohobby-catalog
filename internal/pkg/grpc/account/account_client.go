@@ -1,6 +1,7 @@
 package account
 
 import (
+	"context"
 	"fmt"
 
 	accountpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/account"
@@ -29,4 +30,20 @@ func NewAccountClient(grpcServerAddress string) (*AccountClient, error) {
 
 func (c *AccountClient) Close() {
 	c.Conn.Close()
+}
+
+// GetUser calls the GetUser RPC with just the ID
+func (c *AccountClient) GetUser(ctx context.Context, id string) (*accountpb.User, error) {
+	req := &accountpb.GetUserRequest{
+		Id: id,
+	}
+	return c.Service.GetUser(ctx, req)
+}
+
+// GetUsers calls the GetUsers RPC with a list of IDs
+func (c *AccountClient) GetUsers(ctx context.Context, ids []string) (*accountpb.GetUsersResponse, error) {
+	req := &accountpb.GetUsersRequest{
+		Ids: ids,
+	}
+	return c.Service.GetUsers(ctx, req)
 }

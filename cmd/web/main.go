@@ -11,10 +11,8 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -23,20 +21,18 @@ import (
 
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/db"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/configs"
-	dbGenerated "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/db"
 	customMiddleware "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/delivery/http/middlewares"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/delivery/http/routes"
 	grpcServerImpl "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/grpc"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/handlers"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	dbGenerated "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/db"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/grpc/account"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/logger"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 
-	accountpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/account"
-	authpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/auth"
 	productpb "github.com/RehanAthallahAzhar/tokohobby-protos/pb/product"
 )
 
@@ -46,7 +42,7 @@ func main() {
 
 	cfg, err := configs.LoadConfig(log)
 	if err != nil {
-		log.Fatalf("FATAL: Gagal memuat konfigurasi: %v", err)
+		log.Fatalf("FATAL: Failed to load config: %v", err)
 	}
 
 	dbCredential := models.Credential{
@@ -70,7 +66,7 @@ func main() {
 
 	conn, err := db.Connect(ctx, &dbCredential)
 	if err != nil {
-		log.Fatalf("DB connection error: %v", err)
+		log.Fatalf("Failed to connect to DB: %v", err)
 	}
 
 	// Migrations
@@ -97,12 +93,17 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	accountConn := createGrpcConnection(cfg.GRPC.AccountServiceAddress, log)
-	defer accountConn.Close()
+	accountClientGateway, err := account.NewAccountClient(cfg.GRPC.AccountServiceAddress)
+	if err != nil {
+		log.Fatalf("Failed to create account client: %v", err)
+	}
+	defer accountClientGateway.Close()
 
-	accountClient := accountpb.NewAccountServiceClient(accountConn)
-	authClient := authpb.NewAuthServiceClient(accountConn)
-	authClientWrapper := account.NewAuthClientFromService(authClient, accountConn)
+	authClientGateway, err := account.NewAuthClient(cfg.GRPC.AccountServiceAddress)
+	if err != nil {
+		log.Fatalf("Failed to create auth client: %v", err)
+	}
+	defer authClientGateway.Close()
 
 	// Publisher Rabbitmq
 	rabbitMQURL := cfg.RabbitMQ.URL
@@ -122,9 +123,9 @@ func main() {
 	cartsRepo := repositories.NewCartRepository(redisClient, log)
 	validate := validator.New()
 	productService := services.NewProductService(productsRepo, redisClient, validate, log)
-	cartService := services.NewCartService(cartsRepo, productService, redisClient, accountClient, log)
+	cartService := services.NewCartService(cartsRepo, productService, redisClient, accountClientGateway, log)
 	handler := handlers.NewHandler(productService, cartService, log)
-	authMiddleware := customMiddleware.AuthMiddleware(authClientWrapper, log)
+	authMiddleware := customMiddleware.AuthMiddleware(authClientGateway, cfg.Server.JWTSecret, cfg.Server.Audience, log)
 
 	lis, err := net.Listen("tcp", ":"+cfg.Server.GRPCPort)
 	if err != nil {
@@ -147,11 +148,7 @@ func main() {
 	e.Use(middleware.RequestID())
 	e.Use(customMiddleware.LoggingMiddleware(log))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{
-			"http://localhost",
-			"http://localhost:5173",
-			"http://72.61.142.248",
-		},
+		AllowOrigins: []string{"*"}, // Nginx will handle stricter CORS
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
@@ -159,13 +156,4 @@ func main() {
 	routes.InitRoutes(e, handler, authMiddleware)
 
 	e.Logger.Fatal(e.Start(":" + cfg.Server.Port))
-}
-
-func createGrpcConnection(url string, log *logrus.Logger) *grpc.ClientConn {
-	conn, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Failed to create gRPC client connection to %s: %v", url, err)
-	}
-
-	return conn
 }

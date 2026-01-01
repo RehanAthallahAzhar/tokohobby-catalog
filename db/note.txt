@@ -2,14 +2,11 @@ Solusi "Dirty" Database:
 
 Hapus Volume Secara Manual:
 
-Bash
-
 docker-compose down
 docker volume rm shopeezy_catalog-db-data
 docker-compose up -d catalog-db
 Jalankan Ulang Migrasi:
 
-Bash
 
 # (Jalankan dari root)
 migrate -database "postgres://user:supersecret123@localhost:5433/catalog?sslmode=

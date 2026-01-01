@@ -12,6 +12,7 @@ import (
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/grpc/account"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
 
@@ -33,7 +34,7 @@ type cartServiceImpl struct {
 	cartRepo      repositories.CartRepository
 	productSvc    ProductService
 	redisClient   *redis.RedisClient
-	accountClient accountpb.AccountServiceClient
+	accountClient *account.AccountClient
 	log           *logrus.Logger
 }
 
@@ -41,7 +42,7 @@ func NewCartService(
 	repo repositories.CartRepository,
 	productSvc ProductService,
 	redis *redis.RedisClient,
-	accountClient accountpb.AccountServiceClient,
+	accountClient *account.AccountClient,
 	log *logrus.Logger,
 ) CartService {
 	return &cartServiceImpl{
@@ -216,17 +217,8 @@ func (s *cartServiceImpl) RemoveItemFromCart(ctx context.Context, userID, produc
 
 // ------- HELPERS -------
 
-func (s *cartServiceImpl) fetchAccountDetail(ctx context.Context, sellerID string) (*accountpb.User, error) {
-	accountResponse, err := s.accountClient.GetUser(ctx, &accountpb.GetUserRequest{Id: sellerID})
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve seller details via gRPC: %w", err)
-	}
-
-	return accountResponse, nil
-}
-
 func (s *cartServiceImpl) fetchAccountDetails(ctx context.Context, sellerIDs []string) (map[string]*accountpb.User, error) {
-	accountResponse, err := s.accountClient.GetUsers(ctx, &accountpb.GetUsersRequest{Ids: sellerIDs})
+	accountResponse, err := s.accountClient.GetUsers(ctx, sellerIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve seller details via gRPC: %w", err)
 	}
