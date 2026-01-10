@@ -29,6 +29,7 @@ import (
 	dbGenerated "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/db"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/grpc/account"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/logger"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/messaging"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
@@ -42,7 +43,7 @@ func main() {
 
 	cfg, err := configs.LoadConfig(log)
 	if err != nil {
-		log.Fatalf("FATAL: Failed to load config: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	dbCredential := models.Credential{
@@ -105,26 +106,27 @@ func main() {
 	}
 	defer authClientGateway.Close()
 
-	// Publisher Rabbitmq
-	rabbitMQURL := cfg.RabbitMQ.URL
-	rabbitConn, err := amqp.Dial(rabbitMQURL)
+	// Connect RabbitMQ
+	rabbitConn, err := amqp.Dial(cfg.RabbitMQ.URL)
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
 	defer rabbitConn.Close()
 
-	rabbitChannel, err := rabbitConn.Channel()
-	if err != nil {
-		log.Fatalf("Failed to open a channel: %v", err)
-	}
-	defer rabbitChannel.Close()
+	// Init Messaging Manager
+	msgManager, _ := messaging.NewManager(rabbitConn, 100)
+	defer msgManager.Close()
 
 	productsRepo := repositories.NewProductRepository(conn, sqlcQueries, log)
 	cartsRepo := repositories.NewCartRepository(redisClient, log)
 	validate := validator.New()
+
 	productService := services.NewProductService(productsRepo, redisClient, validate, log)
 	cartService := services.NewCartService(cartsRepo, productService, redisClient, accountClientGateway, log)
-	handler := handlers.NewHandler(productService, cartService, log)
+
+	productHandler := handlers.NewProductHandler(productService, msgManager, log)
+	cartHandler := handlers.NewCartHandler(cartService, msgManager, log)
+
 	authMiddleware := customMiddleware.AuthMiddleware(authClientGateway, cfg.Server.JWTSecret, cfg.Server.Audience, log)
 
 	lis, err := net.Listen("tcp", ":"+cfg.Server.GRPCPort)
@@ -153,7 +155,7 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
-	routes.InitRoutes(e, handler, authMiddleware)
+	routes.InitRoutes(e, productHandler, cartHandler, authMiddleware)
 
 	e.Logger.Fatal(e.Start(":" + cfg.Server.Port))
 }

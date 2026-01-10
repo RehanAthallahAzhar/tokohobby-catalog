@@ -3,15 +3,36 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/messaging"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 )
 
-func (a *API) AddToCart() echo.HandlerFunc {
+type CartHandler struct {
+	CartSvc    services.CartService
+	MsgManager *messaging.Manager
+	log        *logrus.Logger
+}
+
+func NewCartHandler(
+	cartSvc services.CartService,
+	msgManager *messaging.Manager,
+	log *logrus.Logger,
+) *CartHandler {
+	return &CartHandler{
+		CartSvc:    cartSvc,
+		MsgManager: msgManager,
+		log:        log,
+	}
+}
+
+func (h *CartHandler) AddToCart() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -30,15 +51,21 @@ func (a *API) AddToCart() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, errors.ErrInvalidRequestPayload)
 		}
 
-		if err := a.CartSvc.AddItemToCart(ctx, userID, productID, &req); err != nil {
+		if err := h.CartSvc.AddItemToCart(ctx, userID, productID, &req); err != nil {
 			return handleOperationError(c, err)
 		}
+
+		h.MsgManager.Send(messaging.NotificationPayload{
+			Type:    MsgNotifyProductAddedToCart,
+			UserID:  userID,
+			Message: MsgProductAddedToCart,
+		})
 
 		return respondSuccess(c, http.StatusOK, MsgCartCreated, nil)
 	}
 }
 
-func (a *API) GetCartItemsByUserID() echo.HandlerFunc {
+func (h *CartHandler) GetCartItemsByUserID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		logrus.Info("request GetCartItemsByUserID")
 		ctx := c.Request().Context()
@@ -48,7 +75,7 @@ func (a *API) GetCartItemsByUserID() echo.HandlerFunc {
 			return respondError(c, http.StatusUnauthorized, errors.ErrInvalidUserSession)
 		}
 
-		res, err := a.CartSvc.GetCartItemsByUserID(ctx, userID)
+		res, err := h.CartSvc.GetCartItemsByUserID(ctx, userID)
 		if err != nil {
 			return handleGetError(c, err)
 		}
@@ -57,7 +84,7 @@ func (a *API) GetCartItemsByUserID() echo.HandlerFunc {
 	}
 }
 
-func (a *API) UpdateCartItem() echo.HandlerFunc {
+func (h *CartHandler) UpdateCartItem() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -69,28 +96,28 @@ func (a *API) UpdateCartItem() echo.HandlerFunc {
 		productIDStr := c.Param("product_id")
 		productID, err := uuid.Parse(productIDStr)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, "Invalid Product ID format")
+			return respondError(c, http.StatusBadRequest, errors.ErrInvalidRequestPayload)
 		}
 
 		var req models.UpdateCartRequest
 		if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusBadRequest, "Invalid request body: ‘quantity’ is required")
+			return respondError(c, http.StatusBadRequest, errors.ErrInvalidRequestPayload)
 		}
 
-		logger := a.log.WithFields(logrus.Fields{"user_id": userID, "product_id": productID, "new_quantity": req.Quantity})
+		logger := h.log.WithFields(logrus.Fields{"user_id": userID, "product_id": productID, "new_quantity": req.Quantity})
 		logger.Info("Receiving UpdateCartItem requests")
 
-		err = a.CartSvc.UpdateItem(ctx, userID, productID, req.Quantity, req.Description)
+		err = h.CartSvc.UpdateItem(ctx, userID, productID, req.Quantity, req.Description)
 		if err != nil {
 			logger.WithError(err).Error("Error dari service saat memperbarui item keranjang")
-			return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+			return handleOperationError(c, err)
 		}
 
 		return respondSuccess(c, http.StatusOK, MsgCartUpdated, nil)
 	}
 }
 
-func (a *API) RemoveFromCart() echo.HandlerFunc {
+func (h *CartHandler) RemoveFromCart() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -104,10 +131,16 @@ func (a *API) RemoveFromCart() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, err)
 		}
 
-		err = a.CartSvc.RemoveItemFromCart(ctx, userID, productID)
+		err = h.CartSvc.RemoveItemFromCart(ctx, userID, productID)
 		if err != nil {
 			return handleOperationError(c, err)
 		}
+
+		h.MsgManager.Send(messaging.NotificationPayload{
+			Type:    MsgNotifyCartDeleted,
+			UserID:  userID,
+			Message: MsgCartDeleted,
+		})
 
 		return respondSuccess(c, http.StatusOK, MsgCartDeleted, nil)
 	}

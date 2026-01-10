@@ -33,6 +33,15 @@ const (
 	MsgFailedToRetrieveCart  = "Failed to retrieve cart"
 	MsgFailedToUpdateCart    = "Failed to update cart"
 	MsgFailedToDeleteCart    = "Failed to delete cart"
+
+	MsgProductAddedToCart = "Product added to cart successfully"
+
+	MsgNotifyProductAddedToCart = "Product added to cart notification"
+	MsgNotifyCartDeleted        = "Cart deleted notification"
+
+	MsgNotifyProductCreated = "Product created notification"
+	MsgNotifyProductUpdated = "Product updated notification"
+	MsgNotifyProductDeleted = "Product deleted notification"
 )
 
 func respondSuccess(c echo.Context, status int, message string, data interface{}) error {

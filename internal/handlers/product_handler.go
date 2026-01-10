@@ -4,14 +4,35 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
 	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/messaging"
+	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 )
 
-func (api *API) CreateProduct() echo.HandlerFunc {
+type ProductHandler struct {
+	ProductSvc services.ProductService
+	MsgManager *messaging.Manager
+	log        *logrus.Logger
+}
+
+func NewProductHandler(
+	productSvc services.ProductService,
+	msgManager *messaging.Manager,
+	log *logrus.Logger,
+) *ProductHandler {
+	return &ProductHandler{
+		ProductSvc: productSvc,
+		MsgManager: msgManager,
+		log:        log,
+	}
+}
+
+func (p *ProductHandler) CreateProduct() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -25,20 +46,26 @@ func (api *API) CreateProduct() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, apperrors.ErrInvalidRequestPayload)
 		}
 
-		res, err := api.ProductSvc.CreateProduct(ctx, userID, &req)
+		res, err := p.ProductSvc.CreateProduct(ctx, userID, &req)
 		if err != nil {
 			return handleOperationError(c, err)
 		}
+
+		p.MsgManager.Send(messaging.NotificationPayload{
+			Type:    MsgNotifyProductCreated,
+			UserID:  userID,
+			Message: MsgProductCreated,
+		})
 
 		return respondSuccess(c, http.StatusCreated, MsgProductCreated, toProductResponse(res))
 	}
 }
 
-func (api *API) GetAllProducts() echo.HandlerFunc {
+func (p *ProductHandler) GetAllProducts() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
-		res, err := api.ProductSvc.GetAllProducts(ctx)
+		res, err := p.ProductSvc.GetAllProducts(ctx)
 		if err != nil {
 			return handleGetError(c, err)
 		}
@@ -47,7 +74,7 @@ func (api *API) GetAllProducts() echo.HandlerFunc {
 	}
 }
 
-func (api *API) GetProductsByName() echo.HandlerFunc {
+func (p *ProductHandler) GetProductsByName() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -56,7 +83,7 @@ func (api *API) GetProductsByName() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, err)
 		}
 
-		res, err := api.ProductSvc.GetProductsByName(ctx, productName)
+		res, err := p.ProductSvc.GetProductsByName(ctx, productName)
 		if err != nil {
 			return handleGetError(c, err)
 		}
@@ -65,7 +92,7 @@ func (api *API) GetProductsByName() echo.HandlerFunc {
 	}
 }
 
-func (api *API) GetProductsByType() echo.HandlerFunc {
+func (p *ProductHandler) GetProductsByType() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -74,7 +101,7 @@ func (api *API) GetProductsByType() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, err)
 		}
 
-		res, err := api.ProductSvc.GetProductsByType(ctx, productType)
+		res, err := p.ProductSvc.GetProductsByType(ctx, productType)
 		if err != nil {
 			return handleGetError(c, err)
 		}
@@ -83,7 +110,7 @@ func (api *API) GetProductsByType() echo.HandlerFunc {
 	}
 }
 
-func (api *API) GetProductByID() echo.HandlerFunc {
+func (p *ProductHandler) GetProductByID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -92,7 +119,7 @@ func (api *API) GetProductByID() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, err)
 		}
 
-		res, err := api.ProductSvc.GetProductByID(ctx, productID)
+		res, err := p.ProductSvc.GetProductByID(ctx, productID)
 		if err != nil {
 			return handleGetError(c, err)
 		}
@@ -101,7 +128,7 @@ func (api *API) GetProductByID() echo.HandlerFunc {
 	}
 }
 
-func (api *API) GetProductsBySellerID() echo.HandlerFunc {
+func (p *ProductHandler) GetProductsBySellerID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -110,7 +137,7 @@ func (api *API) GetProductsBySellerID() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, err)
 		}
 
-		res, err := api.ProductSvc.GetProductsBySellerID(ctx, sellerID)
+		res, err := p.ProductSvc.GetProductsBySellerID(ctx, sellerID)
 		if err != nil {
 			return handleGetError(c, err)
 		}
@@ -119,7 +146,7 @@ func (api *API) GetProductsBySellerID() echo.HandlerFunc {
 	}
 }
 
-func (api *API) UpdateProduct() echo.HandlerFunc {
+func (p *ProductHandler) UpdateProduct() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -143,17 +170,23 @@ func (api *API) UpdateProduct() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, apperrors.ErrInvalidRequestPayload)
 		}
 
-		res, err := api.ProductSvc.UpdateProduct(ctx, &productData, productID, userID, role)
+		res, err := p.ProductSvc.UpdateProduct(ctx, &productData, productID, userID, role)
 		if err != nil {
 			return handleOperationError(c, err)
 		}
+
+		p.MsgManager.Send(messaging.NotificationPayload{
+			Type:    MsgNotifyProductUpdated,
+			UserID:  userID,
+			Message: MsgProductUpdated,
+		})
 
 		return respondSuccess(c, http.StatusOK, MsgProductUpdated, toProductResponse(res))
 
 	}
 }
 
-func (api *API) DeleteProduct() echo.HandlerFunc {
+func (p *ProductHandler) DeleteProduct() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
@@ -172,20 +205,25 @@ func (api *API) DeleteProduct() echo.HandlerFunc {
 			return respondError(c, http.StatusBadRequest, err)
 		}
 
-		res, err := api.ProductSvc.DeleteProduct(ctx, productID, sellerID, role)
+		res, err := p.ProductSvc.DeleteProduct(ctx, productID, sellerID, role)
 		if err != nil {
 			return handleOperationError(c, err)
 		}
+
+		p.MsgManager.Send(messaging.NotificationPayload{
+			Type:    MsgNotifyProductDeleted,
+			Message: MsgProductDeleted,
+		})
 
 		return respondSuccess(c, http.StatusOK, MsgProductDeleted, toProductResponse(res))
 	}
 }
 
-func (api *API) ClearProductCaches() echo.HandlerFunc {
+func (p *ProductHandler) ClearProductCaches() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
-		err := api.ProductSvc.ResetAllProductCaches(ctx)
+		err := p.ProductSvc.ResetAllProductCaches(ctx)
 		if err != nil {
 			return handleOperationError(c, err)
 		}

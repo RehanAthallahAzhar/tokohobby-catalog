@@ -3,29 +3,9 @@ package handlers
 import (
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
 )
-
-type API struct {
-	ProductSvc services.ProductService
-	CartSvc    services.CartService
-	log        *logrus.Logger
-}
-
-func NewHandler(
-	productSvc services.ProductService,
-	cartSvc services.CartService,
-	log *logrus.Logger,
-) *API {
-	return &API{
-		ProductSvc: productSvc,
-		CartSvc:    cartSvc,
-		log:        log,
-	}
-}
 
 // ---- HELPERS -----
 
