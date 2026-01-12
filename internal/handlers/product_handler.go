@@ -10,24 +10,20 @@ import (
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/helpers"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
 	apperrors "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/messaging"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 )
 
 type ProductHandler struct {
 	ProductSvc services.ProductService
-	MsgManager *messaging.Manager
 	log        *logrus.Logger
 }
 
 func NewProductHandler(
 	productSvc services.ProductService,
-	msgManager *messaging.Manager,
 	log *logrus.Logger,
 ) *ProductHandler {
 	return &ProductHandler{
 		ProductSvc: productSvc,
-		MsgManager: msgManager,
 		log:        log,
 	}
 }
@@ -50,12 +46,6 @@ func (p *ProductHandler) CreateProduct() echo.HandlerFunc {
 		if err != nil {
 			return handleOperationError(c, err)
 		}
-
-		p.MsgManager.Send(messaging.NotificationPayload{
-			Type:    MsgNotifyProductCreated,
-			UserID:  userID,
-			Message: MsgProductCreated,
-		})
 
 		return respondSuccess(c, http.StatusCreated, MsgProductCreated, toProductResponse(res))
 	}
@@ -175,12 +165,6 @@ func (p *ProductHandler) UpdateProduct() echo.HandlerFunc {
 			return handleOperationError(c, err)
 		}
 
-		p.MsgManager.Send(messaging.NotificationPayload{
-			Type:    MsgNotifyProductUpdated,
-			UserID:  userID,
-			Message: MsgProductUpdated,
-		})
-
 		return respondSuccess(c, http.StatusOK, MsgProductUpdated, toProductResponse(res))
 
 	}
@@ -209,11 +193,6 @@ func (p *ProductHandler) DeleteProduct() echo.HandlerFunc {
 		if err != nil {
 			return handleOperationError(c, err)
 		}
-
-		p.MsgManager.Send(messaging.NotificationPayload{
-			Type:    MsgNotifyProductDeleted,
-			Message: MsgProductDeleted,
-		})
 
 		return respondSuccess(c, http.StatusOK, MsgProductDeleted, toProductResponse(res))
 	}

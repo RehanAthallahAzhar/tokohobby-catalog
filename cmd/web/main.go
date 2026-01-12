@@ -11,7 +11,6 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/streadway/amqp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -29,7 +28,6 @@ import (
 	dbGenerated "github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/db"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/grpc/account"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/logger"
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/messaging"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/redis"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/repositories"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
@@ -106,17 +104,6 @@ func main() {
 	}
 	defer authClientGateway.Close()
 
-	// Connect RabbitMQ
-	rabbitConn, err := amqp.Dial(cfg.RabbitMQ.URL)
-	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
-	}
-	defer rabbitConn.Close()
-
-	// Init Messaging Manager
-	msgManager, _ := messaging.NewManager(rabbitConn, 100)
-	defer msgManager.Close()
-
 	productsRepo := repositories.NewProductRepository(conn, sqlcQueries, log)
 	cartsRepo := repositories.NewCartRepository(redisClient, log)
 	validate := validator.New()
@@ -124,8 +111,8 @@ func main() {
 	productService := services.NewProductService(productsRepo, redisClient, validate, log)
 	cartService := services.NewCartService(cartsRepo, productService, redisClient, accountClientGateway, log)
 
-	productHandler := handlers.NewProductHandler(productService, msgManager, log)
-	cartHandler := handlers.NewCartHandler(cartService, msgManager, log)
+	productHandler := handlers.NewProductHandler(productService, log)
+	cartHandler := handlers.NewCartHandler(cartService, log)
 
 	authMiddleware := customMiddleware.AuthMiddleware(authClientGateway, cfg.Server.JWTSecret, cfg.Server.Audience, log)
 

@@ -49,10 +49,11 @@ type ProductService interface {
 }
 
 type productServiceImpl struct {
-	productRepo repositories.ProductRepository
-	redisClient *redis.RedisClient
-	validator   *validator.Validate
-	log         *logrus.Logger
+	productRepo    repositories.ProductRepository
+	redisClient    *redis.RedisClient
+	eventPublisher *validator.Validate
+	validator      *validator.Validate
+	log            *logrus.Logger
 }
 
 func NewProductService(

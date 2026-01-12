@@ -10,25 +10,21 @@ import (
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/entities"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/models"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/errors"
-	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/pkg/messaging"
 	"github.com/RehanAthallahAzhar/tokohobby-catalog/internal/services"
 )
 
 type CartHandler struct {
-	CartSvc    services.CartService
-	MsgManager *messaging.Manager
-	log        *logrus.Logger
+	CartSvc services.CartService
+	log     *logrus.Logger
 }
 
 func NewCartHandler(
 	cartSvc services.CartService,
-	msgManager *messaging.Manager,
 	log *logrus.Logger,
 ) *CartHandler {
 	return &CartHandler{
-		CartSvc:    cartSvc,
-		MsgManager: msgManager,
-		log:        log,
+		CartSvc: cartSvc,
+		log:     log,
 	}
 }
 
@@ -54,13 +50,6 @@ func (h *CartHandler) AddToCart() echo.HandlerFunc {
 		if err := h.CartSvc.AddItemToCart(ctx, userID, productID, &req); err != nil {
 			return handleOperationError(c, err)
 		}
-
-		h.MsgManager.Send(messaging.NotificationPayload{
-			Type:    MsgNotifyProductAddedToCart,
-			UserID:  userID,
-			Message: MsgProductAddedToCart,
-		})
-
 		return respondSuccess(c, http.StatusOK, MsgCartCreated, nil)
 	}
 }
@@ -135,12 +124,6 @@ func (h *CartHandler) RemoveFromCart() echo.HandlerFunc {
 		if err != nil {
 			return handleOperationError(c, err)
 		}
-
-		h.MsgManager.Send(messaging.NotificationPayload{
-			Type:    MsgNotifyCartDeleted,
-			UserID:  userID,
-			Message: MsgCartDeleted,
-		})
 
 		return respondSuccess(c, http.StatusOK, MsgCartDeleted, nil)
 	}
