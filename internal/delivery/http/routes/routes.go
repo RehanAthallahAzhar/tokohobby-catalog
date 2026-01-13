@@ -9,33 +9,33 @@ import (
 
 func InitRoutes(e *echo.Echo, productHandler *handlers.ProductHandler, cartHandler *handlers.CartHandler, authMiddleware echo.MiddlewareFunc) {
 
-	publicGroup := e.Group("/api/v1")
+	api := e.Group("/api")
 
-	productPublicGroup := publicGroup.Group("/products")
+	productPublic := api.Group("/products")
 	{
-		productPublicGroup.GET("/", productHandler.GetAllProducts())
-		productPublicGroup.GET("/name/:name", productHandler.GetProductsByName())
-		productPublicGroup.GET("/category/:type", productHandler.GetProductsByType())
-		productPublicGroup.GET("/:id", productHandler.GetProductByID())
-		productPublicGroup.GET("/seller/:seller_id", productHandler.GetProductsBySellerID())
+		productPublic.GET("/", productHandler.GetAllProducts())
+		productPublic.GET("/name/:name", productHandler.GetProductsByName())
+		productPublic.GET("/category/:type", productHandler.GetProductsByType())
+		productPublic.GET("/:id", productHandler.GetProductByID())
+		productPublic.GET("/seller/:seller_id", productHandler.GetProductsBySellerID())
 	}
 
-	authGroup := e.Group("/api/v1")
-	authGroup.Use(authMiddleware)
+	protectedApi := api
+	protectedApi.Use(authMiddleware)
 
-	productAuthGroup := authGroup.Group("/products")
+	productProtected := protectedApi.Group("/products")
 	{
-		productAuthGroup.POST("/create", productHandler.CreateProduct(), middlewares.RequireRoles("admin", "seller"))
-		productAuthGroup.PUT("/update/:product_id", productHandler.UpdateProduct(), middlewares.RequireRoles("admin", "seller"))
-		productAuthGroup.DELETE("/delete/:product_id", productHandler.DeleteProduct(), middlewares.RequireRoles("admin", "seller"))
-		productAuthGroup.DELETE("/clear-cache", productHandler.ClearProductCaches(), middlewares.RequireRoles("admin")) // Reset cache harus diproteksi
+		productProtected.POST("/", productHandler.CreateProduct(), middlewares.RequireRoles("admin", "seller"))
+		productProtected.PUT("/:product_id", productHandler.UpdateProduct(), middlewares.RequireRoles("admin", "seller"))
+		productProtected.DELETE("/:product_id", productHandler.DeleteProduct(), middlewares.RequireRoles("admin", "seller"))
+		productProtected.DELETE("/clear-cache", productHandler.ClearProductCaches())
 	}
 
-	cartGroup := authGroup.Group("/cart")
+	cart := protectedApi.Group("/cart")
 	{
-		cartGroup.GET("/", cartHandler.GetCartItemsByUserID())
-		cartGroup.POST("/add/:product_id", cartHandler.AddToCart())
-		cartGroup.PUT("/update/:product_id", cartHandler.UpdateCartItem())
-		cartGroup.DELETE("/remove/:product_id", cartHandler.RemoveFromCart())
+		cart.GET("/", cartHandler.GetCartItemsByUserID())
+		cart.POST("/:product_id", cartHandler.AddToCart())
+		cart.PUT("/:product_id", cartHandler.UpdateCartItem())
+		cart.DELETE("/:product_id", cartHandler.RemoveFromCart())
 	}
 }
