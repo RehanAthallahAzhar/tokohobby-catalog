@@ -1,18 +1,18 @@
 # --- Stage 1: Build ---
 FROM golang:1.24-alpine AS builder
 
-# Menetapkan direktori kerja di dalam container
 WORKDIR /app
 
-# Copy file go.mod dan go.sum terlebih dahulu untuk memanfaatkan cache Docker
-# Docker hanya akan men-download dependensi jika file ini berubah
-COPY go.mod go.sum ./
+# Copy local dependencies (protos)
+COPY protos /app/protos
+
+# Copy catalog service
+COPY catalog /app/catalog
+WORKDIR /app/catalog
+
+# Download dependencies (will use local protos via replace directive)
 RUN go mod download
-
-# Copy seluruh sisa source code
-COPY . .
-
-# Kompilasi aplikasi Go.
+# Build aplikasi
 # CGO_ENABLED=0 untuk membuat binary yang statis (tidak tergantung library C)
 # GOOS=linux karena kita akan menjalankannya di base image Alpine Linux
 # -o /app/server akan menghasilkan output binary bernama 'server' di direktori /app
@@ -32,7 +32,7 @@ COPY --from=builder /app/server .
 # Contoh: COPY --from=builder /app/internal/configs/config.yaml .
 
 # migration
-COPY --from=builder /app/db/migrations ./db/migrations
+COPY --from=builder /app/catalog/db/migrations ./db/migrations
 
 # Expose port yang digunakan oleh aplikasi Anda di dalam container
 # Ganti 8080 jika aplikasi Anda berjalan di port lain

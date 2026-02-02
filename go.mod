@@ -3,7 +3,7 @@ module github.com/RehanAthallahAzhar/tokohobby-catalog
 go 1.24.5
 
 require (
-	github.com/RehanAthallahAzhar/tokohobby-protos v0.0.0-20251228082717-30b8d4498bbb
+	github.com/RehanAthallahAzhar/tokohobby-protos v0.0.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-redis/redis/v8 v8.11.5
@@ -41,3 +41,5 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
 )
+
+replace github.com/RehanAthallahAzhar/tokohobby-protos => ../protos
